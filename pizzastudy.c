@@ -10,6 +10,7 @@
 
 int pizza = 1;
 int slice = 1;
+
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void *eating (void *);
@@ -21,18 +22,23 @@ int main(int argc, char *argv[]){
 	pthread_t sthreads[students];
 	pthread_t delivery;
 	printf("Number of students: %d\n",students);
-	//scanf("%d",&n);
-	//thread = (pthread_t *) malloc (students*sizeof(pthread_t));
 	while(pizza < 13){
 	//pthread_mutex_lock(&mutex);
-	if(slice == 8){
-		pthread_create(&delivery,NULL,deliver,NULL);
-	}
-	else if( students > 1 && students < 6 ){
+	if( students > 1 && students < 6 ){
 	//pthread_mutex_lock(&mutex);
-	for(count=0; count<students && slice<8;count++){
-		printf("I am Student %d\n",count+1);
+	for(count=0; count<students;count++){
+		if(slice == 8){
+		//pthread_mutex_lock(&mutex);
+		slice=1;
+		pthread_create(&delivery,NULL,deliver,NULL);
+		//pthread_mutex_unlock(&mutex);
+	}
+	else{
+		//pthread_mutex_lock(&mutex);
 		pthread_create(&sthreads[count],NULL,eating,(void *)(intptr_t)count);
+		slice++;
+		//pthread_mutex_unlock(&mutex);
+	}
 		}
 	//pthread_mutex_unlock(&mutex);	
 	}
@@ -53,16 +59,22 @@ int main(int argc, char *argv[]){
 
 void *eating (void *arg){
     int studentid = (int)(intptr_t)arg;
+	//pthread_mutex_lock(&mutex);
     printf("Student %d is eating a slice of pizza %d\n",studentid+1,pizza);
-	slice++;
+	
 	sleep(rand() % 3);
+	
+	//pthread_mutex_unlock(&mutex);
 	
 }
 
 void *deliver (void *arg){
-    printf("pizza %d is delivered \n", pizza);
-	slice = 1;
+	int studentid = (int)(intptr_t)arg;
+	//pthread_mutex_lock(&mutex);
 	pizza++;
-	sleep(rand() % 3);
+	printf("Student %d ordered pizza %d \n",studentid+1, pizza);
+	printf("pizza %d is delivered \n", pizza);
+	//sleep(rand() % 3);
+	//pthread_mutex_unlock(&mutex);
 
 }
